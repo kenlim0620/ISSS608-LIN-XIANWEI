@@ -1,12 +1,8 @@
 project:
   type: website
-  output-dir: docs
 
 website:
   title: "ISSS608_LIN XIANWEI Profile"
-  description: "Interactive visual analytics for ISSS68"
-  repo-url: "https://github.com/kenlim0620"
-  repo-actions: [edit, issue]
   
   page-footer:
     background: dark
