@@ -11,4 +11,4 @@ number-sections: true
 
 **In this website, you can find my any coursework for this module.**
 
-![](images/Screenshot 2025-10-03 000237.jpg)
+![](images/Screenshot%202025-10-03%20000237.jpg)

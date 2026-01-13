@@ -11,4 +11,4 @@ format:
 editor: visual
 ---
 
-**This is the second hand-on exercise**
+**This is the second hand-on exercise!**

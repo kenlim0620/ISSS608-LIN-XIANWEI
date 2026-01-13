@@ -13,7 +13,7 @@ website:
     foreground: light
     left: "© 2026 ISSS608 Team"
     right: 
-      - icon: github
+      - icon: github 
   
   navbar:
     background: primary

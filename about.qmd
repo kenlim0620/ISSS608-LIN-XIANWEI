@@ -2,4 +2,4 @@
 title: "About"
 ---
 
-***This is LIN XIANWEI ISSS608 Exercises***
+***This is about LIN XIANWEI ISSS608 Exercises***
