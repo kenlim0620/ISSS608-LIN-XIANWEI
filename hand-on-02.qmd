@@ -1,0 +1,14 @@
+---
+title: "Hand-on Exercise 2"
+format: 
+  html:
+    toc: true
+    toc-title: "Table of Contents"
+    toc-location: left
+    code-fold: show
+    code-tools: true
+    theme: cosmo
+editor: visual
+---
+
+**This is the second hand-on exercise**

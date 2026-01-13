@@ -1,0 +1,66 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "ISSS608_LIN XIANWEI Profile"
+  description: "Interactive visual analytics for ISSS68"
+  repo-url: "https://github.com/kenlim0620"
+  repo-actions: [edit, issue]
+  
+  page-footer:
+    background: dark
+    foreground: light
+    left: "© 2026 ISSS608 Team"
+    right: 
+      - icon: github
+  
+  navbar:
+    background: primary
+    search: true
+    left:
+      - href: index.qmd
+        text: "Home"
+        
+      - href: about.qmd
+        text: "About"
+      
+      # 1. Dropdown for Hands-on Exercises
+      - text: "Hands-on Exercises"
+        menu:
+          - href: hand-on-01.qmd
+            text: "Hand-on Exercise 1"
+          - href: hand-on-02.qmd
+            text: "Hand-on Exercise 2"
+
+      # 2. Dropdown for In-class Exercises
+      - text: "In-class Exercises"
+        menu:
+          - href: in-class-01.qmd
+            text: "In-class Exercise 1"
+          - href: in-class-02.qmd
+            text: "In-class Exercise 2"
+
+      # 3. Dropdown for Take-Home Exercises
+      - text: "Take-Home Exercises"
+        menu:
+          - href: take-home-01.qmd
+            text: "Take-Home Exercises 1"
+          - href: take-home-02.qmd
+            text: "Take-Home Exercises 2"
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    fig-width: 12
+    fig-height: 8
+    fig-dpi: 300
+    include-in-header:
+      - text: |
+          <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+editor: visual
+
+

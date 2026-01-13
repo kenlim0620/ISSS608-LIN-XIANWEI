@@ -1,0 +1,14 @@
+---
+title: "ISSS608-Visual Analytics & Applications"
+date-modified: last-modified
+date-format: "MMMM D, YYYY"
+author: "LIN XIANWEI"
+highlight-style: pygments
+number-sections: true
+---
+
+**Welcome to *LIN XIANWEI*' s Visual Analytics Home Page.**
+
+**In this website, you can find my any coursework for this module.**
+
+![](images/Screenshot 2025-10-03 000237.jpg)

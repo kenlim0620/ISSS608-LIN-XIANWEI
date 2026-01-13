@@ -1,0 +1,12 @@
+---
+title: "In-class Exercise 1"
+format: 
+  html:
+    toc: true
+    toc-title: "Table of Contents"
+    toc-location: left
+    code-fold: show
+    code-tools: true
+    theme: cosmo
+editor: visual
+---
