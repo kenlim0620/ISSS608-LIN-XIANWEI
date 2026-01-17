@@ -12,3 +12,166 @@ editor: visual
 ---
 
 **This is the second hand-on exercise!**
+
+```{r}
+pacman::p_load(ggrepel, patchwork, 
+               ggthemes, hrbrthemes,
+               tidyverse) 
+```
+
+```{r}
+exam_data <- read_csv("Exam_data.csv")
+```
+
+```{r}
+ggplot(data = exam_data,
+       aes(x = MATHS,
+           y = ENGLISH)) +
+  geom_point() +
+  geom_smooth(method = lm, linewidth = 0.5) +  # FIX HERE
+  geom_label(aes(label = ID),
+             hjust = 0.5,
+             vjust = -0.5) +
+  coord_cartesian(xlim = c(0, 100),
+                  ylim = c(0, 100)) +
+  ggtitle("English scores versus Maths scores for Primary 3")
+
+```
+
+```{r}
+ggplot(data=exam_data, 
+       aes(x= MATHS, 
+           y=ENGLISH)) +
+  geom_point() +
+  geom_smooth(method=lm, 
+              size=0.5) +  
+  geom_label_repel(aes(label = ID), 
+                   fontface = "bold") +
+  coord_cartesian(xlim=c(0,100),
+                  ylim=c(0,100)) +
+  ggtitle("English scores versus Maths scores for Primary 3")
+```
+
+```{r}
+ggplot(data=exam_data, 
+             aes(x = MATHS)) +
+  geom_histogram(bins=20, 
+                 boundary = 100,
+                 color="grey25", 
+                 fill="grey90") +
+  theme_gray() +
+  ggtitle("Distribution of Maths scores") 
+```
+
+```{r}
+ggplot(data=exam_data, 
+             aes(x = MATHS)) +
+  geom_histogram(bins=20, 
+                 boundary = 100,
+                 color="grey25", 
+                 fill="grey90") +
+  ggtitle("Distribution of Maths scores") +
+  theme_economist()
+```
+
+```{r}
+ggplot(data=exam_data, 
+             aes(x = MATHS)) +
+  geom_histogram(bins=20, 
+                 boundary = 100,
+                 color="grey25", 
+                 fill="grey90") +
+  ggtitle("Distribution of Maths scores") +
+  theme_ipsum()
+```
+
+```{r}
+ggplot(data=exam_data, 
+             aes(x = MATHS)) +
+  geom_histogram(bins=20, 
+                 boundary = 100,
+                 color="grey25", 
+                 fill="grey90") +
+  ggtitle("Distribution of Maths scores") +
+  theme_ipsum(axis_title_size = 18,
+              base_size = 15,
+              grid = "Y")
+```
+
+```{r}
+ggplot(data=exam_data, 
+             aes(x = MATHS)) +
+  geom_histogram(bins=20, 
+                 boundary = 100,
+                 color="grey25", 
+                 fill="grey90") + 
+  coord_cartesian(xlim=c(0,100)) +
+  ggtitle("Distribution of Maths scores")
+```
+
+```{r}
+ggplot(data=exam_data, 
+             aes(x= MATHS, 
+                 y=ENGLISH)) +
+  geom_point() +
+  geom_smooth(method=lm, 
+              size=0.5) +  
+  coord_cartesian(xlim=c(0,100),
+                  ylim=c(0,100)) +
+  ggtitle("English scores versus Maths scores for Primary 3")
+```
+
+```{r}
+p1 <- ggplot(data=exam_data, 
+             aes(x = MATHS)) +
+  geom_histogram(bins=20, 
+                 boundary = 100,
+                 color="grey25", 
+                 fill="grey90") + 
+  coord_cartesian(xlim=c(0,100)) +
+  ggtitle("Distribution of Maths scores")
+
+p2 <- ggplot(data=exam_data, 
+             aes(x = ENGLISH)) +
+  geom_histogram(bins=20, 
+                 boundary = 100,
+                 color="grey25", 
+                 fill="grey90") +
+  coord_cartesian(xlim=c(0,100)) +
+  ggtitle("Distribution of English scores")
+
+
+p3 <- ggplot(data=exam_data, 
+             aes(x= MATHS, 
+                 y=ENGLISH)) +
+  geom_point() +
+  geom_smooth(method=lm, 
+              size=0.5) +  
+  coord_cartesian(xlim=c(0,100),
+                  ylim=c(0,100)) +
+  ggtitle("English scores versus Maths scores for Primary 3")
+
+p1 + p2
+```
+
+```{r}
+(p1 / p2) | p3
+```
+
+```{r}
+((p1 / p2) | p3) + 
+  plot_annotation(tag_levels = 'I')
+```
+
+```{r}
+p3 + inset_element(p2, 
+                   left = 0.02, 
+                   bottom = 0.7, 
+                   right = 0.5, 
+                   top = 1)
+```
+
+```{r}
+patchwork <- (p1 / p2) | p3
+patchwork & theme_economist()
+```
