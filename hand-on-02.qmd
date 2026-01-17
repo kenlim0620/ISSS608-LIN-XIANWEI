@@ -82,7 +82,7 @@ ggplot(data=exam_data,
                  color="grey25", 
                  fill="grey90") +
   ggtitle("Distribution of Maths scores") +
-  theme_ipsum()
+  theme_minimal()
 ```
 
 ```{r}
@@ -93,9 +93,7 @@ ggplot(data=exam_data,
                  color="grey25", 
                  fill="grey90") +
   ggtitle("Distribution of Maths scores") +
-  theme_ipsum(axis_title_size = 18,
-              base_size = 15,
-              grid = "Y")
+  theme_minimal()
 ```
 
 ```{r}
