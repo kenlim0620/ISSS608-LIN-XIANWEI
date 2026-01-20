@@ -17,6 +17,8 @@ editor: visual
 pacman::p_load(ggrepel, patchwork, 
                ggthemes, hrbrthemes,
                tidyverse) 
+
+remotes::install_git("https://codeberg.org/hrbrmstr/hrbrthemes.git")
 ```
 
 ```{r}
