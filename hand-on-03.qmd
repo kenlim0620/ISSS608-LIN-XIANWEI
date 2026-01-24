@@ -277,9 +277,268 @@ crosstalk::bscols(gg,
                   widths = 5)        
 ```
 
+```{r}
+d <- highlight_key(exam_data) 
+p <- ggplot(d, 
+            aes(ENGLISH, 
+                MATHS)) + 
+  geom_point(size=1) +
+  coord_cartesian(xlim=c(0,100),
+                  ylim=c(0,100))
+
+gg <- highlight(ggplotly(p),        
+                "plotly_selected")  
+
+crosstalk::bscols(gg,               
+                  DT::datatable(d), 
+                  widths = 5)        
+```
+
 # **Second Part**
 
 ```{r}
 pacman::p_load(readxl, gifski, gapminder,
                plotly, gganimate, tidyverse)
+```
+
+```{r}
+pacman::p_load(tidyverse, gganimate, plotly, gifski)
+
+# 1. Import Data
+raw_data <- read_csv("respopagesextod2025.csv")
+
+# 2. Data Transformation (Wrangling)
+# We need to pivot the data from "Long" (Age Groups in rows) to "Wide" (Young/Old columns)
+pop_data <- raw_data %>%
+  # Create a simplified Age Category flag
+  mutate(Age_Category = case_when(
+    AG %in% c("0_to_4", "5_to_9", "10_to_14") ~ "Young",
+    AG %in% c("65_to_69", "70_to_74", "75_to_79", "80_to_84", "85_to_89", "90_and_over") ~ "Old",
+    TRUE ~ "Working_Age"
+  )) %>%
+  # Group by Planning Area (PA) and Time to aggregate
+  group_by(PA, Time) %>%
+  summarise(
+    Total_Pop = sum(Pop),
+    Young_Pop = sum(Pop[Age_Category == "Young"]),
+    Old_Pop = sum(Pop[Age_Category == "Old"]),
+    .groups = 'drop'
+  ) %>%
+  # Filter out areas with 0 population to avoid errors
+  filter(Total_Pop > 0) %>%
+  # Calculate Percentages
+  mutate(Percent_Young = (Young_Pop / Total_Pop) * 100,
+         Percent_Old = (Old_Pop / Total_Pop) * 100)
+
+# Inspect the result
+head(pop_data)
+```
+
+```{r}
+# Create the base static plot
+p <- ggplot(pop_data, aes(x = Percent_Old, y = Percent_Young, 
+                          size = Total_Pop, 
+                          colour = PA)) +
+  geom_point(alpha = 0.7, 
+             show.legend = FALSE) +
+  scale_size(range = c(2, 12)) +
+  labs(title = 'Year: {frame_time}', 
+       x = '% Aged (65+)', 
+       y = '% Young (0-14)') +
+  theme_minimal()
+```
+
+```{r}
+# 1. Create a simulated dataset with two years (2020 and 2025)
+pop_data_simulated <- pop_data %>%
+  mutate(Time = 2025) %>%
+  bind_rows(
+    pop_data %>% 
+      mutate(Time = 2020, 
+             Percent_Old = Percent_Old * 0.9,    # Pretend 2020 had fewer old people
+             Percent_Young = Percent_Young * 1.1)# Pretend 2020 had more young people
+  )
+
+# 2. Run the animation on the simulated data
+ggplot(pop_data_simulated, aes(x = Percent_Old, y = Percent_Young, 
+                               size = Total_Pop, 
+                               colour = PA)) +
+  geom_point(alpha = 0.7, 
+             show.legend = FALSE) +
+  scale_size(range = c(2, 12)) +
+  labs(title = 'Year: {frame_time}', 
+       x = '% Aged', 
+       y = '% Young') +
+  transition_time(Time) +        
+  ease_aes('linear')
+```
+
+```{r}
+# Create interactive plot using ggplotly
+# Note: We include 'frame = Time' and 'ids = PA' for the animation logic
+gg <- ggplot(pop_data, aes(x = Percent_Old, y = Percent_Young, 
+                           size = Total_Pop, 
+                           colour = PA)) +
+  geom_point(aes(size = Total_Pop,
+                 frame = Time, 
+                 ids = PA),
+             alpha = 0.7) +
+  scale_size(range = c(2, 12)) +
+  labs(x = '% Aged', 
+       y = '% Young') + 
+  theme(legend.position='none')
+
+ggplotly(gg)
+```
+
+```{r}
+ggplot(pop_data, aes(x = Percent_Old, y = Percent_Young, 
+                     size = Total_Pop, 
+                     colour = PA)) +
+  geom_point(alpha = 0.7, 
+             show.legend = FALSE) +
+  # scale_colour_manual(values = country_colors) +  <-- Removed: Incompatible with PA data
+  scale_size(range = c(2, 12)) +
+  labs(title = 'Year: {frame_time}', 
+       x = '% Aged', 
+       y = '% Young')
+```
+
+```{r}
+# Load necessary libraries
+pacman::p_load(tidyverse, gganimate)
+
+# 1. Import
+raw_data <- read_csv("respopagesextod2025.csv")
+
+# 2. Transform to calculate % Young and % Old per Planning Area
+pop_data <- raw_data %>%
+  mutate(Age_Category = case_when(
+    AG %in% c("0_to_4", "5_to_9", "10_to_14") ~ "Young",
+    AG %in% c("65_to_69", "70_to_74", "75_to_79", "80_to_84", "85_to_89", "90_and_over") ~ "Old",
+    TRUE ~ "Working_Age"
+  )) %>%
+  group_by(PA, Time) %>%
+  summarise(
+    Total_Pop = sum(Pop),
+    Young_Pop = sum(Pop[Age_Category == "Young"]),
+    Old_Pop = sum(Pop[Age_Category == "Old"]),
+    .groups = 'drop'
+  ) %>%
+  filter(Total_Pop > 0) %>%
+  mutate(Percent_Young = (Young_Pop / Total_Pop) * 100,
+         Percent_Old = (Old_Pop / Total_Pop) * 100)
+```
+
+```{r}
+gg <- ggplot(pop_data, 
+       aes(x = Percent_Old, 
+           y = Percent_Young, 
+           size = Total_Pop, 
+           colour = PA)) +
+  geom_point(aes(size = Total_Pop,
+                 frame = Time),
+             alpha = 0.7, 
+             show.legend = FALSE) +
+  scale_size(range = c(2, 12)) +
+  labs(x = '% Aged', 
+       y = '% Young')
+
+ggplotly(gg)
+```
+
+```{r}
+gg <- ggplot(pop_data, 
+       aes(x = Percent_Old, 
+           y = Percent_Young, 
+           size = Total_Pop, 
+           colour = PA)) +
+  geom_point(aes(size = Total_Pop,
+                 frame = Time),
+             alpha = 0.7) +
+  scale_size(range = c(2, 12)) +
+  labs(x = '% Aged', 
+       y = '% Young') + 
+  theme(legend.position='none')
+
+ggplotly(gg)
+```
+
+```{r}
+bp <- pop_data %>%
+  plot_ly(x = ~Percent_Old, 
+          y = ~Percent_Young, 
+          size = ~Total_Pop, 
+          color = ~PA,
+          sizes = c(2, 100),
+          frame = ~Time, 
+          text = ~PA, 
+          hoverinfo = "text",
+          type = 'scatter',
+          mode = 'markers'
+          ) %>%
+  layout(showlegend = FALSE)
+bp
+```
+
+```{r}
+ggplot(pop_data, aes(x = Percent_Old, y = Percent_Young, 
+                     size = Total_Pop, 
+                     colour = PA)) +
+  geom_point(alpha = 0.7, 
+             show.legend = FALSE) +
+  scale_size(range = c(2, 12)) +
+  labs(title = 'Year: 2025',  # Hardcoded since it's only 2025
+       x = '% Aged', 
+       y = '% Young')
+```
+
+```{r}
+# 1. Create dummy data for 2020 to simulate a time series
+pop_data_simulated <- pop_data %>%
+  mutate(Time = 2025) %>%
+  bind_rows(
+    pop_data %>% 
+      mutate(Time = 2020, 
+             Percent_Old = Percent_Old * 0.9,  # Simulate slightly different values
+             Percent_Young = Percent_Young * 1.1)
+  )
+
+# 2. Now run the animation on the simulated data
+ggplot(pop_data_simulated, aes(x = Percent_Old, y = Percent_Young, 
+                               size = Total_Pop, 
+                               colour = PA)) +
+  geom_point(alpha = 0.7, 
+             show.legend = FALSE) +
+  scale_size(range = c(2, 12)) +
+  labs(title = 'Year: {frame_time}', 
+       x = '% Aged', 
+       y = '% Young') +
+  transition_time(Time) +        
+  ease_aes('linear')
+```
+
+```{r}
+# 1. Create a simulated dataset with two years (2020 and 2025)
+pop_data_simulated <- pop_data %>%
+  mutate(Time = 2025) %>%
+  bind_rows(
+    pop_data %>% 
+      mutate(Time = 2020, 
+             Percent_Old = Percent_Old * 0.9,    # Pretend 2020 had fewer old people
+             Percent_Young = Percent_Young * 1.1)# Pretend 2020 had more young people
+  )
+
+# 2. Run the animation on the simulated data
+ggplot(pop_data_simulated, aes(x = Percent_Old, y = Percent_Young, 
+                               size = Total_Pop, 
+                               colour = PA)) +
+  geom_point(alpha = 0.7, 
+             show.legend = FALSE) +
+  scale_size(range = c(2, 12)) +
+  labs(title = 'Year: {frame_time}', 
+       x = '% Aged', 
+       y = '% Young') +
+  transition_time(Time) +        
+  ease_aes('linear')
 ```
