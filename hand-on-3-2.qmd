@@ -22,14 +22,6 @@ pacman::p_load(readxl, gifski, gapminder,
 col <- c("Country", "Continent")
 globalPop <- read_xls("GlobalPopulation.xls",
                       sheet="Data") %>%
-  mutate_each_(funs(factor(.)), col) %>%
-  mutate(Year = as.integer(Year))
-```
-
-```{r}
-col <- c("Country", "Continent")
-globalPop <- read_xls("GlobalPopulation.xls",
-                      sheet="Data") %>%
   mutate_at(col, as.factor) %>%
   mutate(Year = as.integer(Year))
 ```
