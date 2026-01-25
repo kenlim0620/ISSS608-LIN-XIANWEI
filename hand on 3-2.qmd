@@ -1,6 +1,17 @@
 ---
 title: "Hand on Exercise 3-2"
+format: 
+  html:
+    toc: true
+    toc-title: "Table of Contents"
+    toc-location: left
+    code-fold: show
+    code-tools: true
+    theme: cosmo
+editor: visual
 ---
+
+this is 3-2
 
 ```{r}
 pacman::p_load(readxl, gifski, gapminder,
