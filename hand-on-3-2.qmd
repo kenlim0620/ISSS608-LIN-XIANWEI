@@ -28,14 +28,6 @@ globalPop <- read_xls("GlobalPopulation.xls",
 
 ```{r}
 col <- c("Country", "Continent")
-globalPop <- read_xls("GlobalPopulation.xls",
-                      sheet="Data") %>%
-  mutate(across(col, as.factor)) %>%
-  mutate(Year = as.integer(Year))
-```
-
-```{r}
-col <- c("Country", "Continent")
 
 globalPop <- read_xls("GlobalPopulation.xls", sheet="Data") %>%
   # Wrap 'col' in all_of() to tell R it's an external list of names
