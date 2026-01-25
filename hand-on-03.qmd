@@ -542,3 +542,221 @@ ggplot(pop_data_simulated, aes(x = Percent_Old, y = Percent_Young,
   transition_time(Time) +        
   ease_aes('linear')
 ```
+
+```{r}
+pacman::p_load(readxl, gifski, gapminder,
+               plotly, gganimate, tidyverse)
+```
+
+```{r}
+col <- c("Country", "Continent")
+globalPop <- read_xls("GlobalPopulation.xls",
+                      sheet="Data") %>%
+  mutate_at(col, as.factor) %>%
+  mutate(Year = as.integer(Year))
+```
+
+```{r}
+ggplot(globalPop, aes(x = Old, y = Young, 
+                      size = Population, 
+                      colour = Country)) +
+  geom_point(alpha = 0.7, 
+             show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  labs(title = 'Year: {frame_time}', 
+       x = '% Aged', 
+       y = '% Young') 
+```
+
+```{r}
+# 1. Load ALL required packages fresh
+pacman::p_load(readxl, gifski, gapminder, plotly, gganimate, tidyverse, png)
+
+# 2. Reload the data (GlobalPopulation)
+col <- c("Country", "Continent")
+globalPop <- read_xls("GlobalPopulation.xls", sheet="Data") %>%
+  mutate(across(all_of(col), as.factor)) %>%
+  mutate(Year = as.integer(Year))
+
+# 3. Create the animation object (assign to 'p', don't print yet)
+p <- ggplot(globalPop, aes(x = Old, y = Young, 
+                           size = Population, 
+                           colour = Country)) +
+  geom_point(alpha = 0.7, 
+             show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  labs(title = 'Year: {frame_time}', 
+       x = '% Aged', 
+       y = '% Young') +
+  transition_time(Year) +       
+  ease_aes('linear')
+
+# 4. Render explicitly using gifski_renderer()
+# This forces R to use the correct engine instead of guessing
+animate(p, renderer = gifski_renderer())        
+```
+
+```{r}
+gg <- ggplot(globalPop, 
+       aes(x = Old, 
+           y = Young, 
+           size = Population, 
+           colour = Country)) +
+  geom_point(aes(size = Population,
+                 ),
+             alpha = 0.7, 
+             show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  labs(x = '% Aged', 
+       y = '% Young')
+
+ggplotly(gg)
+```
+
+```{r}
+# 1. Load Packages
+
+pacman::p_load(tidyverse, plotly, gganimate)
+
+
+
+# 2. Import and Transform Data
+
+# We first calculate the % Young and % Old for each area
+
+raw_data <- read_csv("respopagesextod2025.csv")
+
+
+
+pop_data <- raw_data %>%
+
+  mutate(Age_Category = case_when(
+
+    AG %in% c("0_to_4", "5_to_9", "10_to_14") ~ "Young",
+
+    AG %in% c("65_to_69", "70_to_74", "75_to_79", "80_to_84", "85_to_89", "90_and_over") ~ "Old",
+
+    TRUE ~ "Working_Age"
+
+  )) %>%
+
+  group_by(PA, Time) %>%
+
+  summarise(
+
+    Total_Pop = sum(Pop),
+
+    Young_Pop = sum(Pop[Age_Category == "Young"]),
+
+    Old_Pop = sum(Pop[Age_Category == "Old"]),
+
+    .groups = 'drop'
+
+  ) %>%
+
+  filter(Total_Pop > 0) %>%
+
+  mutate(Percent_Young = (Young_Pop / Total_Pop) * 100,
+
+         Percent_Old = (Old_Pop / Total_Pop) * 100)
+
+
+
+# 3. (Optional) Simulate Data for 2020
+
+# We create a fake 2020 dataset so the Play button actually moves dots!
+
+pop_data_simulated <- pop_data %>%
+
+  mutate(Time = 2025) %>%
+
+  bind_rows(
+
+    pop_data %>% 
+
+      mutate(Time = 2020, 
+
+             Percent_Old = Percent_Old * 0.85,    # Pretend 2020 was younger
+
+             Percent_Young = Percent_Young * 1.1) # Pretend 2020 had more kids
+
+  )
+
+
+
+# 4. Build the Animated Plot using ggplotly method
+
+# Note: usage of frame = Time creates the slider
+
+# Note: usage of theme(legend.position='none') removes the legend
+
+gg <- ggplot(pop_data_simulated, 
+
+             aes(x = Percent_Old, 
+
+                 y = Percent_Young, 
+
+                 size = Total_Pop, 
+
+                 colour = PA)) +
+
+  geom_point(aes(size = Total_Pop,
+
+                 frame = Time,   # Creates the animation frames
+
+                 ids = PA),      # Ensures smooth transition of specific bubbles
+
+             alpha = 0.7) +
+
+  scale_size(range = c(2, 12)) +
+
+  labs(x = '% Aged', 
+
+       y = '% Young') +
+
+  theme(legend.position='none') # Removes the legend as requested
+
+
+
+# 5. Generate the Interactive Plot
+
+ggplotly(gg)
+```
+
+```{r}
+gg <- ggplot(globalPop, 
+       aes(x = Old, 
+           y = Young, 
+           size = Population, 
+           colour = Country)) +
+  geom_point(aes(size = Population,
+                 ),
+             alpha = 0.7) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  labs(x = '% Aged', 
+       y = '% Young') + 
+  theme(legend.position='none')
+
+ggplotly(gg)
+```
+
+```{r}
+bp <- globalPop %>%
+  plot_ly(x = ~Old, 
+          y = ~Young, 
+          size = ~Population, 
+          color = ~Continent,
+          sizes = c(2, 100),
+          frame = ~Year, 
+          text = ~Country, 
+          hoverinfo = "text",
+          type = 'scatter',
+          mode = 'markers'
+          ) %>%
+  layout(showlegend = FALSE)
+bp
+```
