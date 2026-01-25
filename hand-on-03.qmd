@@ -653,3 +653,33 @@ bp <- globalPop %>%
   layout(showlegend = FALSE)
 bp
 ```
+
+```{r}
+# 1. Load Packages
+pacman::p_load(tidyverse, plotly)
+
+# 2. Build the Plot (Clean Version)
+bp <- globalPop %>%
+  plot_ly(x = ~Old, 
+          y = ~Young, 
+          size = ~Population, 
+          color = ~Continent,
+          sizes = c(2, 100),
+          frame = ~Year, 
+          text = ~Country, 
+          hoverinfo = "text",
+          type = 'scatter',
+          mode = 'markers',
+          # FIX: Explicitly define marker line width to 0 to stop the warning
+          marker = list(sizemode = 'diameter', 
+                        opacity = 0.7,
+                        line = list(width = 0)) 
+          ) %>%
+  layout(showlegend = FALSE,
+         xaxis = list(title = '% Aged'),
+         yaxis = list(title = '% Young'),
+         title = "Global Population Dynamics")
+
+# 3. Display the plot
+bp
+```
