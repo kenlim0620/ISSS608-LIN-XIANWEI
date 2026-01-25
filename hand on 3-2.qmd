@@ -1,5 +1,5 @@
 ---
-title: "hand on 3-2"
+title: "Hand on Exercise 3-2"
 ---
 
 ```{r}
