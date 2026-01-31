@@ -377,6 +377,24 @@ exam %>%
 ```
 
 ```{r}
+library(ggdist)
+library(tidyverse)
+
+# Assuming 'exam' is already loaded in your environment
+exam %>%
+  ggplot(aes(x = RACE, 
+             y = MATHS)) +
+  stat_gradientinterval(   
+    fill = "skyblue",      
+    show.legend = TRUE,
+    fill_type = "segments"  # <--- ADD THIS LINE to stop the warning
+  ) +                        
+  labs(
+    title = "Visualising confidence intervals of mean math score",
+    subtitle = "Gradient + interval plot")
+```
+
+```{r}
 library(ungeviz)
 ggplot(data = exam, 
        (aes(x = factor(RACE), 
