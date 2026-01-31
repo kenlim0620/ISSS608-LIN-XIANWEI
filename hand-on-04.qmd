@@ -363,42 +363,6 @@ exam %>%
     subtitle = "Mean Point + Multiple-interval plot")
 ```
 
-```{r}
-exam %>%
-  ggplot(aes(x = RACE, 
-             y = MATHS)) +
-  stat_gradientinterval(   
-    fill = "skyblue",      
-    show.legend = TRUE     
-  ) +                        
-  labs(
-    title = "Visualising confidence intervals of mean math score",
-    subtitle = "Gradient + interval plot")
-```
-
-```{r}
-
-library(ungeviz)
-```
-
-```{r}
-ggplot(data = exam, 
-       (aes(x = factor(RACE), 
-            y = MATHS))) +
-  geom_point(position = position_jitter(
-    height = 0.3, 
-    width = 0.05), 
-    size = 0.4, 
-    color = "#0072B2", 
-    alpha = 1/2) +
-  geom_hpline(data = sampler(25, 
-                             group = RACE), 
-              height = 0.6, 
-              color = "#D55E00") +
-  theme_bw() + 
-  transition_states(.draw, 1, 3)
-```
-
 # **This is Fourth Part**
 
 ```{r}
