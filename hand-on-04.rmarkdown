@@ -404,3 +404,4 @@ ggplot(data = exam,
 ```{r}
 pacman::p_load(tidyverse, FunnelPlotR, plotly, knitr)
 ```
+
