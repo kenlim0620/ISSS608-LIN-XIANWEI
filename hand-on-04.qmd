@@ -1,5 +1,14 @@
 ---
-title: "Hands on Exercise 4"
+title: "Hands-on Exercise 4"
+format: 
+  html:
+    toc: true
+    toc-title: "Table of Contents"
+    toc-location: left
+    code-fold: show
+    code-tools: true
+    theme: cosmo
+editor: visual
 ---
 
 # **This is the First Part**
@@ -388,4 +397,10 @@ ggplot(data = exam,
               color = "#D55E00") +
   theme_bw() + 
   transition_states(.draw, 1, 3)
+```
+
+# **This is Fourth Part**
+
+```{r}
+pacman::p_load(tidyverse, FunnelPlotR, plotly, knitr)
 ```
