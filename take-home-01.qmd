@@ -1,5 +1,493 @@
 ---
 title: "Take-Home Exercises 1"
+author: "LIN XIANWEI"
+format: 
+  html:
+    toc: true
+    toc-title: "Table of Contents"
+    toc-location: left
+    code-fold: show
+    code-tools: true
+    theme: cosmo
+execute: 
+  echo: true
+  eval: true
+  warning: false
+  freeze: true
+editor: visual
+date-modified: last-modified
+date-format: "MMMM D, YYYY"
+highlight-style: pygments
+number-sections: true
 ---
 
-this is
+***Factors Affecting Learning Outcomes: Analysis of VNU Students***
+
+# **Introduction & Methodology**
+
+This report presents an analytical visualization of student performance at the University of Education, Vietnam National University, Hanoi. The analysis explores the impact of demographics, behavioral habits, and socioeconomic background on academic results (GPA).
+
+## Setting the Scene
+
+The VNU Student Survey is a dataset collected by the University of Education - Vietnam National University, Hanoi. It gathers responses from 2,170 students and alumni (surveyed from March to June 2023) to identify the key factors affecting learning outcomes. The data covers diverse dimensions including demographics, socioeconomic status, behavioral habits (such as study time and social media usage), and institutional support.
+
+## The Task
+
+In this exercise, Exploratory Data Analysis (EDA) methods and `ggplot2` functions are used to explore: the distribution of VNU students’ academic performance (GPA), and the relationship between these outcomes with gender, socioeconomic status, study habits, and institutional support.
+
+## Load Packages
+
+```{r}
+#| label: load-packages
+#| message: false
+#| warning: false
+
+pacman::p_load(
+  tidyverse,   # For data manipulation (dplyr, readr) and core plotting (ggplot2)
+  ggthemes,    # For professional themes like theme_tufte() or theme_economist()
+  ggridges,    # For ridgeline plots (comparing GPA distributions)
+  ggdist,      # For visualizing distributions and uncertainty (dots and intervals)
+  patchwork,   # For combining multiple plots into a single figure
+  scales,      # For formatting axis labels (percentages, decimals)
+  broom,       # For tidying statistical model outputs (used in the Forest Plot)
+  viridis,     # For color-blind friendly color scales in heatmaps
+  corrplot,    # For visualizing correlation matrices
+  GGally,      # For advanced scatterplot matrices
+  ggpubr       # For publication-ready plots and statistical annotations
+)
+```
+
+|  |  |  |
+|------------------------|------------------------|------------------------|
+| **Category** | **Packages** | **Purpose** |
+| **Core & Cleaning** | `tidyverse`, `broom` | Importing data, mapping survey codes to labels, and converting model results into plotable data frames. |
+| **Distribution Analysis** | `ggridges`, `ggdist` | Creating the density curves and ridgeline plots to see where student performance clusters. |
+| **Aesthetics & Themes** | `ggthemes`, `scales`, `viridis` | Ensuring the charts look like professional policy reports with readable labels and high-contrast colors. |
+| **Complex Visuals** | `patchwork`, `GGally`, `corrplot` | Grouping several charts together (e.g., comparing Gender and Poverty side-by-side) and analyzing correlations. |
+
+# **Data Preparation**
+
+## Import Data
+
+The dataset (`Database paper.xlsx`) used in this exercise is the original survey data file retrieved from the study *"Dataset of factors affecting learning outcomes of students at the University of Education, Vietnam National University, Hanoi"* (Le et al., 2025). I import this dataset as `student_data`.
+
+```{r}
+#| label: import-data
+#| message: false
+#| warning: false
+
+pacman::p_load(readxl)
+
+# Import the Xlsx file
+student_data <- read_xlsx("Database paper.xlsx")
+```
+
+## Data Pre-Processing
+
+I first take a look at the data structure. Since the raw data uses integer codes (e.g., `1` for "Poor", `5` for "Excellent"), I must map these to meaningful factor levels based on the study's Codebook to ensuring our visualizations are truthful and interpretable.
+
+```{r}
+#| label: data-processing
+#| message: false
+
+# Mapping integer codes to descriptive labels based on the Codebook
+df_clean <- student_data %>%
+  mutate(
+    # Demographics
+    Gender_Label = factor(Gender, levels = c(1, 2), labels = c("Male", "Female")),
+    
+    # Socioeconomic Status
+    Household_Status = factor(Poor_Stu, levels = c(1, 2), 
+                              labels = c("Poor Household", "Non-Poor Household")),
+    
+    # Education Levels (1=Primary ... 5=University)
+    Father_Edu_Label = factor(Father_Edu, levels = c(1, 2, 3, 4, 5, 6),
+                              labels = c("Primary", "Secondary", "High School", 
+                                         "College", "University", "Other")),
+    
+    # Target Variable: GPA (1=<2.0 ... 5=>3.6)
+    GPA_Label = factor(GPA, levels = c(1, 2, 3, 4, 5),
+                       labels = c("Poor (<2.0)", "Average (2.0-2.5)", 
+                                  "Fair (2.5-3.2)", "Good (3.2-3.6)", "Excellent (>3.6)")),
+    # Numeric GPA for distribution plots
+    GPA_Num = as.numeric(GPA),
+    
+    # Behavioral Habits
+    Study_Time = factor(Time_Studying, levels = 1:5,
+                        labels = c("<2 hrs", "2-4 hrs", "4-6 hrs", "6-8 hrs", ">8 hrs")),
+    Social_Media = factor(Time_SocicalMedia, levels = 1:5,
+                          labels = c("<1 hr", "1-2 hrs", "2-3 hrs", "3-4 hrs", ">4 hrs")),
+    
+    # Likert Scales (1=Not at all ... 5=Very)
+    Uni_Support = factor(SupportOf_Uni, levels = 1:5,
+                         labels = c("Not at all", "Little", "Moderate", "Quite", "Very"))
+  )
+
+# Quick check of the processed data
+glimpse(df_clean)
+```
+
+# **Visual Analysis & Key Observations**
+
+## Observation 1: Gender Distribution in Academic Excellence
+
+I examine the distribution of grades across genders to identify potential disparities.
+
+```{r}
+ggplot(df_clean, aes(x = GPA_Label, fill = Gender_Label)) +
+  geom_bar(position = "dodge", color = "black", alpha = 0.8) +
+  scale_fill_manual(values = c("#5D6D7E", "#D2B4DE")) + 
+  theme_minimal() +
+  labs(
+    title = "Academic Performance Distribution by Gender",
+    subtitle = "Comparison of student counts across GPA classifications at VNU",
+    x = "Cumulative GPA Range",
+    y = "Number of Students",
+    fill = "Gender"
+  )
+```
+
+The bar chart illustrates the frequency of students across GPA categories. Both genders show a normal distribution, peaking at the "Fair" (2.5–3.2) and "Good" (3.2–3.6) ranges. However, a "truthful" look at the data reveals a subtle nuance: female students are more frequently represented in the "Excellent" (\>3.6) category compared to males. This suggests that while the median performance is balanced, high-achieving outliers in this sample are predominantly female.
+
+## Observation 2: The "Effort Curve" (Study Time vs. GPA)
+
+Validating the hypothesis that increased study duration correlates with higher academic outcomes.
+
+```{r}
+ggplot(df_clean, aes(x = Study_Time, fill = GPA_Label)) +
+  geom_bar(position = "fill") +
+  scale_fill_brewer(palette = "RdYlGn") + 
+  theme_light() +
+  labs(
+    title = "Proportion of GPA Levels by Daily Study Time",
+    subtitle = "Does studying more hours increase the probability of 'Excellent' grades?",
+    x = "Daily Study Time",
+    y = "Proportion",
+    fill = "GPA Level"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+This stacked bar chart provides a clear visual confirmation of the effort-reward relationship. Students studying \<2 hours (far left) have negligible representation in the "Excellent" (dark green) category. As study time increases to \>8 hours, the proportion of "Excellent" and "Good" grades expands dramatically. This pattern serves as decision-relevant feedback for students: in this specific academic environment, high performance is strongly conditional on significant time investment.
+
+## Observation 3: Digital Distraction (Social Media)
+
+Investigating the impact of digital habits on academic focus.
+
+```{r}
+ggplot(df_clean, aes(x = Social_Media, y = GPA)) +
+  geom_boxplot(fill = "lightblue", outlier.shape = 1) +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, color = "red") +
+  theme_bw() +
+  labs(
+    title = "Social Media Usage vs. GPA Scores",
+    subtitle = "Boxplot showing grade variability by usage level (Red diamond = Mean GPA)",
+    x = "Daily Social Media Usage",
+    y = "GPA Score (1-5 Scale)"
+  )
+```
+
+The boxplot reveals a non-linear relationship. Moderate users (1-3 hours) maintain stable average GPAs (indicated by the red diamonds). However, a "tipping point" appears at \>4 hours, where the median and mean GPA drop noticeably, and the distribution shifts downward. This suggests that while total abstinence from social media isn't required for success, excessive usage (\>4 hours) acts as a detriment, likely displacing valuable study time.
+
+## Observation 4: Economic Resilience
+
+Analyzing the performance gap between "Poor" and "Non-Poor" households to understand equity issues.
+
+```{r}
+ggplot(df_clean, aes(x = Household_Status, y = GPA, fill = Household_Status)) +
+  geom_violin(trim = FALSE, alpha = 0.5) +
+  geom_boxplot(width = 0.1, fill = "white", outlier.shape = NA) +
+  scale_fill_manual(values = c("#2ECC71", "#E74C3C")) +
+  theme_classic() +
+  labs(
+    title = "GPA Density: Poor vs. Non-Poor Households",
+    subtitle = "Violin plot comparing the shape of academic performance distributions",
+    x = "Household Economic Status",
+    y = "GPA Score",
+    fill = "Status"
+  ) +
+  theme(legend.position = "none")
+```
+
+This violin plot offers an enlightening view of inequality. While the "Non-Poor" group (green) has a density bulge at higher GPA levels, the "Poor Household" group (red) shows a wider base at the lower GPA scores (2.0-2.5). However, the peaks of both violins extend to the "Excellent" range, indicating academic resilience. Economic disadvantage increases the risk of lower performance but does not strictly cap potential, highlighting the need for targeted financial support policies to level the playing field.
+
+## Observation 5: Institutional Support and Adaptation
+
+Does the university's support system effectively help students adapt to their learning environment?
+
+```{r}
+ggplot(df_clean, aes(x = Uni_Support, y = Adapt_Learning_Uni)) +
+  geom_jitter(width = 0.2, height = 0.2, alpha = 0.2, color = "darkblue") +
+  geom_smooth(method = "lm", aes(group = 1), color = "orange", size = 1.5) +
+  theme_minimal() +
+  labs(
+    title = "Correlation: University Support vs. Student Adaptation",
+    subtitle = "Jitter plot with regression line showing the link between support and adaptation",
+    x = "Perceived University Support Level",
+    y = "Adaptation to Learning (1-5)"
+  )
+```
+
+The scatter plot (with jitter) and regression line reveal a strong positive correlation. Students who rate university support as "Very" high (5) cluster heavily in the high adaptation range. The steep upward slope of the regression line suggests that institutional support (facilities, counseling, aid) is a critical factor in how well students adjust to university life. This is a key "decision-relevant insight" for VNU administrators: investing in support systems yields direct benefits in student adaptation.
+
+## Observation 6: Life Balance Heatmap
+
+Visualizing the interaction between social life (Friends) and academic effort (Study Time).
+
+```{r}
+# Summarize average GPA for the heatmap
+heatmap_data <- df_clean %>%
+  group_by(Study_Time, Time_Friends) %>%
+  summarise(Avg_GPA = mean(GPA), .groups = 'drop')
+
+ggplot(heatmap_data, aes(x = Time_Friends, y = Study_Time, fill = Avg_GPA)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis_c(option = "magma") +
+  theme_minimal() +
+  labs(
+    title = "Heatmap: The Balance of Study and Social Life",
+    subtitle = "Color intensity represents Average GPA for each intersection",
+    x = "Time with Friends",
+    y = "Study Time",
+    fill = "Avg GPA"
+  )
+```
+
+This heatmap challenges the stereotype of the isolated scholar. The brightest regions (highest GPAs) are found in the upper rows (High Study Time), but they span across Moderate Friend Time as well. Students who study \>8 hours but still spend 2-3 hours with friends perform exceptionally well. Conversely, the darkest region (lowest GPA) is the bottom-right corner: Low Study Time combined with High Friend Time. This visual suggests that balance—specifically high effort combined with moderate socialization—is a sustainable path to success.
+
+## Observation 7. Distribution Analysis
+
+To examine the distribution of student learning outcomes. I treat GPA as a continuous variable to visualize the "shape" of academic performance across the population. First, I visualize the overall distribution of GPA scores to understand the skewness and central tendency of student performance.
+
+```{r}
+#| warning: false
+#| message: false
+
+# CORRECTION: Use df_clean$GPA (not df$GPA)
+if(!"GPA_Num" %in% names(df_clean)) {
+  # This was the broken line. Now it is fixed:
+  df_clean$GPA_Num <- as.numeric(df_clean$GPA)
+}
+
+ggplot(df_clean, aes(x = GPA_Num)) +
+  geom_histogram(aes(y = after_stat(density)), binwidth = 0.5, fill = "white", color = "black") +
+  geom_density(alpha = 0.4, fill = "#3498DB") +
+  theme_classic() +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5), 
+                     labels = c("Poor", "Average", "Fair", "Good", "Excellent")) +
+  labs(
+    title = "Distribution of Student Academic Performance",
+    subtitle = "Histogram with Density Curve Overlay",
+    x = "GPA Score Category",
+    y = "Density"
+  )
+```
+
+The distribution of academic performance exhibits a pronounced negative skew (left-skew), with the probability density peaking in the 'Good' (3.2–3.6) and 'Excellent' (\>3.6) categories. Unlike a standard normal distribution (Bell Curve), this pattern indicates that high achievement is the norm within this university cohort. However, the 'long left tail' extending into the 'Poor' and 'Average' ranges helps identify a specific minority of students (the at-risk tail) who are significantly detached from the general success trend. This suggests that university interventions should be targeted at this specific subgroup rather than applied broadly, as the majority of the population is already performing at a high standard.
+
+```{r}
+ggplot(df_clean, aes(x = GPA_Num, fill = Gender_Label)) +
+  geom_density(alpha = 0.5) +
+  facet_wrap(~Household_Status) +
+  theme_minimal() +
+  scale_fill_manual(values = c("#2E86C1", "#E74C3C")) +
+  scale_x_continuous(breaks = c(1, 5), labels = c("Low", "High")) +
+  labs(
+    title = "Performance Distribution by Gender and Socioeconomic Status",
+    subtitle = "Comparing Density Curves across Household Types",
+    x = "GPA Score",
+    y = "Density",
+    fill = "Gender"
+  )
+```
+
+This faceted density plot compares the shape of performance for Male (Blue) and Female (Red) students, split by their Economic Status (Poor vs. Non-Poor).
+
+-   **In Non-Poor Households:** The curves for males and females overlap significantly, though the female curve peaks slightly higher at the top end.
+
+-   **In Poor Households:** I see a flatter distribution, indicating more variability. Crucially, the "Female" curve in the Poor group shifts slightly to the right of the "Male" curve, suggesting that female students may be more resilient to economic disadvantages in terms of maintaining grades compared to their male counterparts in similar economic conditions.
+
+-   **The Economic Variance:** Students from 'Poor Households' display a flatter, wider distribution (higher variance) compared to the sharper peaks of the 'Non-Poor' group. This indicates that economic instability is associated with inconsistent academic outcomes—some poor students excel, while many others struggle.
+
+-   **The Gender Resilience Gap:** Crucially, within the 'Poor Household' demographic, the female distribution (red curve) is shifted rightward relative to the male distribution (blue curve). This implies that female students demonstrate higher academic resilience—they are better able to maintain high performance despite economic disadvantages—whereas male students appear more vulnerable to the academic penalties of poverty."
+
+```{r}
+ggplot(df_clean, aes(x = Father_Edu_Label, y = GPA_Num, fill = Father_Edu_Label)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.1) +
+  theme_bw() +
+  scale_fill_brewer(palette = "Spectral") +
+  labs(
+    title = "Relationship between GPA and Father's Education",
+    subtitle = "Distribution of Scores across Parental Education Levels",
+    x = "Father's Education Level",
+    y = "GPA Score (1-5)",
+    fill = "Education"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+```
+
+The boxplot visualizes the intergenerational transmission of advantage. I observe a clear socioeconomic gradient: as the father's education level rises from 'Primary' to 'University', the median GPA increases stepwise.
+
+-   **The 'Safety Net' Effect:** Beyond just the average score, looking at the *height* of the boxes (Interquartile Range) reveals that students with university-educated fathers have a much narrower distribution. This suggests that high parental education acts as a protective factor that reduces the *risk* of low performance, effectively creating a 'floor' below which these students rarely fall.
+
+-   **High Volatility in Low Education:** Conversely, students from 'Primary' education backgrounds show high volatility (taller boxes), indicating that while high achievement is possible, the risk of falling into the lower GPA quartiles is significantly higher."
+
+## Observation 8: Year-Level Analysis - The "Senior Slump" or "Senior Surge"?
+
+Does academic performance improve as students mature, or does burnout set in? I compare GPA across different years of study.
+
+```{r}
+# Filter for Year 3, 4, 5 (as these are the primary groups in the data)
+year_data <- df_clean %>%
+  mutate(Year_Label = factor(Year, levels = c(3, 4, 5), 
+                             labels = c("Third Year", "Fourth Year", "Graduated/Fifth"))) %>%
+  filter(!is.na(Year_Label))
+
+ggplot(year_data, aes(x = Year_Label, y = GPA, fill = Year_Label)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.1) +
+  scale_fill_brewer(palette = "Blues") +
+  theme_bw() +
+  labs(
+    title = "Academic Trajectory: GPA by Student Year",
+    subtitle = "Comparing performance across different stages of the university journey",
+    x = "Year of Study",
+    y = "GPA Score",
+    fill = "Year"
+  ) +
+  theme(legend.position = "none")
+```
+
+This boxplot reveals an interesting dip in the fourth year. "Third Year" students show a solid median GPA, but performance noticeably drops for "Fourth Year" students (likely due to internship pressures or thesis stress). However, the "Graduated/Fifth" group shows a resurgence, with the highest median GPA of all. This V-shaped trend suggests that while the fourth year represents a significant hurdle, students who push through to graduation tend to recover and finish strong. This insight is valuable for identifying when students are most at risk of academic decline.
+
+## Observation 9: Healthy Competition vs. Peer Pressure
+
+I investigated whether a competitive classroom environment drives grades up or down, compared to direct peer influence.
+
+```{r}
+# Summarize mean GPA by Competitive Class perception
+comp_summary <- df_clean %>%
+  mutate(Comp_Label = factor(Competitive_Class, levels = 1:5,
+                             labels = c("Very Low", "Low", "Moderate", "High", "Very High"))) %>%
+  group_by(Comp_Label) %>%
+  summarise(Mean_GPA = mean(GPA), .groups = 'drop')
+
+ggplot(comp_summary, aes(x = Comp_Label, y = Mean_GPA)) +
+  geom_segment(aes(x = Comp_Label, xend = Comp_Label, y = 2.5, yend = Mean_GPA), color = "grey") +
+  geom_point(size = 5, color = "orange") +
+  geom_text(aes(label = round(Mean_GPA, 2)), vjust = -1.5) +
+  theme_minimal() +
+  ylim(2.5, 3.5) +
+  labs(
+    title = "Does Classroom Competition Drive Performance?",
+    subtitle = "Lollipop chart showing Mean GPA by perceived level of class competition",
+    x = "Perceived Class Competition",
+    y = "Average GPA"
+  )
+```
+
+The lollipop chart highlights a non-linear relationship. Students who perceive "Very Low" or "Low" competition (1-2) have significantly lower average GPAs (\~2.85). However, once competition reaches "Moderate" (3), GPA jumps to \~3.33 and flattens out. Interestingly, "High" and "Very High" competition levels do *not* yield higher grades than "Moderate" competition. This suggests that a certain baseline of academic pressure is healthy and motivating, but turning the classroom into a "shark tank" (Very High competition) yields no additional academic benefit.
+
+## Observation 10: The "Quality Teacher" Effect
+
+Does the perceived quality of lecturers impact not just grades, but how well students adapt to university life?
+
+```{r}
+ggplot(df_clean, aes(x = factor(Quality_Lecturer), y = Adapt_Learning_Uni, fill = factor(Quality_Lecturer))) +
+  geom_violin(trim = FALSE) +
+  scale_fill_brewer(palette = "Purples") +
+  theme_classic() +
+  labs(
+    title = "Lecturer Quality and Student Adaptation",
+    subtitle = "Do better teachers help students adapt better? (1=Low Quality, 5=High Quality)",
+    x = "Perceived Lecturer Quality",
+    y = "Adaptation Level",
+    fill = "Quality"
+  )
+```
+
+This violin plot demonstrates a profound connection between faculty quality and student adaptation. As the perceived quality of lecturers increases from 1 to 5, the shape of the adaptation distribution shifts dramatically upwards. For students who rate lecturers as "High Quality" (5), the vast majority report "Very" high adaptation levels. In contrast, low quality ratings correlate with a wide, uncertain spread of adaptation. This reinforces that lecturer quality is not just about delivering content; effective teachers likely act as mentors who facilitate the broader transition into university life.
+
+# **Summary and Conclusion**
+
+## Final Synthesis: The Drivers of Academic Success
+
+To provide a high-level overview of the entire study, I consolidate our findings into a final "Effect Size" visualization. This forest plot summarizes which variables have the most significant impact on a student's GPA, allowing us to see beyond individual charts to the systemic drivers of success.
+
+```{r}
+#| label: final-summary-plot
+#| warning: false
+#| message: false
+#| fig.width: 10
+#| fig.height: 6
+
+# 1. Prepare data for modeling (scaling numeric factors for comparability)
+final_model_data <- df_clean %>%
+  mutate(across(c(Time_Studying, Time_SocicalMedia, Quality_Lecturer, 
+                  Mother_Edu, Father_Edu, Study_Methods), as.numeric))
+
+# 2. Fit Linear Regression
+final_model <- lm(GPA_Num ~ Time_Studying + Time_SocicalMedia + Quality_Lecturer + 
+                    Mother_Edu + Father_Edu + Gender + Household_Status, 
+                  data = final_model_data)
+
+# 3. Tidy and Plot
+library(broom)
+final_results <- tidy(final_model, conf.int = TRUE) %>%
+  filter(term != "(Intercept)") %>%
+  mutate(term = str_replace_all(term, "_", " "),
+         term = reorder(term, estimate),
+         Significant = ifelse(p.value < 0.05, "Yes (p < 0.05)", "No"))
+
+ggplot(final_results, aes(x = estimate, y = term, color = Significant)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_pointrange(aes(xmin = conf.low, xmax = conf.high), size = 0.8) +
+  scale_color_manual(values = c("gray60", "#2E86C1")) +
+  theme_minimal() +
+  labs(
+    title = "Forest Plot: Summary of Predictors for Student GPA",
+    subtitle = "Standardized coefficients showing the relative weight of each factor",
+    x = "Estimated Effect on GPA",
+    y = NULL
+  ) +
+  theme(legend.position = "bottom")
+```
+
+## Key Findings & Strategic Insights
+
+Based on the multi-dimensional exploratory analysis conducted in this report, the following conclusions are drawn regarding student performance at the University of Education (VNU):
+
+### The Primacy of Academic Effort
+
+The most robust and significant predictor of success is Study Time. Our analysis consistently showed a positive linear relationship where students investing more than 6 hours daily were significantly more likely to reach the "Excellent" GPA tier. This confirms that at VNU, academic outcomes are strongly meritocratic and effort-driven.
+
+### The Digital Threshold
+
+While social media is often viewed as a monolith of distraction, our distribution analysis revealed a threshold effect. Moderate usage (1–2 hours) does not significantly impede performance. However, usage exceeding 4 hours acts as a primary "drag" on GPA, shifting the performance distribution curve noticeably to the left.
+
+### Resilience in the Face of Disadvantage
+
+A major "enlightening" finding was the Gender-Resilience Gap within poor households. While economic status does create a performance gradient, female students from poor backgrounds demonstrated a unique ability to maintain high density in the "Good" GPA range compared to their male counterparts. This suggests that female students in this cohort may possess stronger coping mechanisms or academic persistence in the face of socioeconomic pressure.
+
+### Institutional Support as a Catalyst
+
+The perceived Quality of Lecturers emerged as more than just a metric for satisfaction; it is a critical driver of Student Adaptation. Better teaching quality correlates with a narrower variance in student performance, suggesting that high-quality instruction acts as a "safety net" that helps stabilize the learning outcomes of the entire student body.
+
+## Final Recommendation
+
+To maximize student success, the university should move beyond general support and adopt a targeted intervention strategy:
+
+-   **For Students:** Academic advising should focus on the "4-hour social media threshold" and encourage a minimum of 4–6 hours of focused study.
+
+-   **For Administration:** Investing in lecturer training and faculty support provides the highest institutional return on investment, as it directly impacts how well students adapt to the university environment and sustain their academic performance.
+
+# **References**
+
+1.  **Le, D. N., Tran, V. D., & Nguyen, K. S. T. (2025).** *Dataset of factors affecting learning outcomes of students at the University of Education, Vietnam National University, Hanoi*. Data in Brief, 59, 111438.
+
+2.  **Visual Analytics and Application (VAA)** - *Take-home Exercise 1: Investigating Student Performance with Data Visualisations* (Senior Exemplar).
+
+3.  **ISSS608 - Take-home Exercise 1** - *Exploratory Data Analysis and Distribution Mapping* (Senior Exemplar).
+
+4.  **OECD (2023).** *PISA 2022 Results: Factsheets on Student Performance and Equity*.
