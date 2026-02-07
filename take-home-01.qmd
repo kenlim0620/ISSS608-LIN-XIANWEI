@@ -58,7 +58,7 @@ pacman::p_load(
 ```
 
 |  |  |  |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | **Category** | **Packages** | **Purpose** |
 | **Core & Cleaning** | `tidyverse`, `broom` | Importing data, mapping survey codes to labels, and converting model results into plotable data frames. |
 | **Distribution Analysis** | `ggridges`, `ggdist` | Creating the density curves and ridgeline plots to see where student performance clusters. |
@@ -262,76 +262,69 @@ To examine the distribution of student learning outcomes. I treat GPA as a conti
 ```{r}
 #| warning: false
 #| message: false
+#| fig.width: 14
+#| fig.height: 10
 
-# CORRECTION: Use df_clean$GPA (not df$GPA)
+# 1. Prepare Data
+# Ensure GPA_Num exists
 if(!"GPA_Num" %in% names(df_clean)) {
-  # This was the broken line. Now it is fixed:
   df_clean$GPA_Num <- as.numeric(df_clean$GPA)
 }
 
-ggplot(df_clean, aes(x = GPA_Num)) +
+# 2. Create Plot A: Overall Distribution (Histogram + Density)
+p1 <- ggplot(df_clean, aes(x = GPA_Num)) +
   geom_histogram(aes(y = after_stat(density)), binwidth = 0.5, fill = "white", color = "black") +
   geom_density(alpha = 0.4, fill = "#3498DB") +
   theme_classic() +
   scale_x_continuous(breaks = c(1, 2, 3, 4, 5), 
                      labels = c("Poor", "Average", "Fair", "Good", "Excellent")) +
   labs(
-    title = "Distribution of Student Academic Performance",
+    title = "A. Distribution of Student Academic Performance",
     subtitle = "Histogram with Density Curve Overlay",
     x = "GPA Score Category",
     y = "Density"
   )
-```
 
-The distribution of academic performance exhibits a pronounced negative skew (left-skew), with the probability density peaking in the 'Good' (3.2–3.6) and 'Excellent' (\>3.6) categories. Unlike a standard normal distribution (Bell Curve), this pattern indicates that high achievement is the norm within this university cohort. However, the 'long left tail' extending into the 'Poor' and 'Average' ranges helps identify a specific minority of students (the at-risk tail) who are significantly detached from the general success trend. This suggests that university interventions should be targeted at this specific subgroup rather than applied broadly, as the majority of the population is already performing at a high standard.
-
-```{r}
-ggplot(df_clean, aes(x = GPA_Num, fill = Gender_Label)) +
+# 3. Create Plot B: Gender & Economic Status (Faceted Density)
+p2 <- ggplot(df_clean, aes(x = GPA_Num, fill = Gender_Label)) +
   geom_density(alpha = 0.5) +
   facet_wrap(~Household_Status) +
   theme_minimal() +
   scale_fill_manual(values = c("#2E86C1", "#E74C3C")) +
   scale_x_continuous(breaks = c(1, 5), labels = c("Low", "High")) +
-  labs(
-    title = "Performance Distribution by Gender and Socioeconomic Status",
-    subtitle = "Comparing Density Curves across Household Types",
-    x = "GPA Score",
-    y = "Density",
-    fill = "Gender"
-  )
-```
+  labs(title = "B. Gender & Economic Gaps", x = "GPA", y = "Density", fill = "Gender") +
+  theme(legend.position = "bottom")
 
-This faceted density plot compares the shape of performance for Male (Blue) and Female (Red) students, split by their Economic Status (Poor vs. Non-Poor).
-
--   **In Non-Poor Households:** The curves for males and females overlap significantly, though the female curve peaks slightly higher at the top end.
-
--   **In Poor Households:** I see a flatter distribution, indicating more variability. Crucially, the "Female" curve in the Poor group shifts slightly to the right of the "Male" curve, suggesting that female students may be more resilient to economic disadvantages in terms of maintaining grades compared to their male counterparts in similar economic conditions.
-
--   **The Economic Variance:** Students from 'Poor Households' display a flatter, wider distribution (higher variance) compared to the sharper peaks of the 'Non-Poor' group. This indicates that economic instability is associated with inconsistent academic outcomes—some poor students excel, while many others struggle.
-
--   **The Gender Resilience Gap:** Crucially, within the 'Poor Household' demographic, the female distribution (red curve) is shifted rightward relative to the male distribution (blue curve). This implies that female students demonstrate higher academic resilience—they are better able to maintain high performance despite economic disadvantages—whereas male students appear more vulnerable to the academic penalties of poverty."
-
-```{r}
-ggplot(df_clean, aes(x = Father_Edu_Label, y = GPA_Num, fill = Father_Edu_Label)) +
+# 4. Create Plot C: Father's Education (Boxplot)
+p3 <- ggplot(df_clean, aes(x = Father_Edu_Label, y = GPA_Num, fill = Father_Edu_Label)) +
   geom_boxplot(outlier.shape = NA, alpha = 0.7) +
   geom_jitter(width = 0.2, alpha = 0.1) +
   theme_bw() +
   scale_fill_brewer(palette = "Spectral") +
   labs(
-    title = "Relationship between GPA and Father's Education",
+    title = "C. Relationship between GPA and Father's Education",
     subtitle = "Distribution of Scores across Parental Education Levels",
     x = "Father's Education Level",
     y = "GPA Score (1-5)",
     fill = "Education"
   ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+
+# 5. Combine using Patchwork
+# Layout: Plot A on top (full width), Plots B and C side-by-side below
+(p1) / (p2 + p3) + 
+  plot_annotation(
+    title = 'Comprehensive Distribution Analysis of Student Performance',
+    subtitle = 'A: Overall Trend | B: Socioeconomic Interaction | C: Parental Education Effect',
+    caption = 'Source: VNU Student Survey Dataset (2023)'
+  )
 ```
 
-The boxplot visualizes the intergenerational transmission of advantage. I observe a clear socioeconomic gradient: as the father's education level rises from 'Primary' to 'University', the median GPA increases stepwise.
+The distribution analysis uncovers the structural "shape" of academic success at VNU. First, the overall performance (Plot A) is left-skewed, meaning high achievement is the baseline norm; the density curve peaks in the "Good" to "Excellent" range, leaving only a small "at-risk" tail of underperformers.
 
--   **The 'Safety Net' Effect:** Beyond just the average score, looking at the *height* of the boxes (Interquartile Range) reveals that students with university-educated fathers have a much narrower distribution. This suggests that high parental education acts as a protective factor that reduces the *risk* of low performance, effectively creating a 'floor' below which these students rarely fall.
+Secondly, Plot B reveals an interaction between gender and economics. While poverty generally widens performance variance (creating more inconsistent outcomes), female students demonstrate superior resilience. Within the "Poor Household" demographic, the female distribution curve shifts noticeably rightward compared to males, suggesting women better withstand economic pressure to maintain grades.
 
--   **High Volatility in Low Education:** Conversely, students from 'Primary' education backgrounds show high volatility (taller boxes), indicating that while high achievement is possible, the risk of falling into the lower GPA quartiles is significantly higher."
+Finally, Plot C confirms a robust intergenerational gradient. A clear stepwise increase in median GPA correlates with Father’s Education. Crucially, higher parental education corresponds to a narrower Interquartile Range. This implies that family human capital acts as a "safety net," effectively creating a performance floor that prevents students from falling into the lowest academic tiers.
 
 ## Observation 8: Year-Level Analysis - The "Senior Slump" or "Senior Surge"?
 
