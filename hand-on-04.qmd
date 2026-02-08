@@ -163,7 +163,7 @@ ggplot(exam,
   theme_economist()
 ```
 
-# This is Second Part
+# **This is Second Part**
 
 ```{r}
 pacman::p_load(ggstatsplot, tidyverse)
@@ -226,7 +226,7 @@ ggbarstats(exam1,
            y = GENDER)
 ```
 
-# This is the Third Part
+# **This is the Third Part**
 
 ```{r}
 pacman::p_load(plotly, crosstalk, DT, 

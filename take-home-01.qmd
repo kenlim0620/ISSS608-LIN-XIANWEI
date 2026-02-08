@@ -57,7 +57,7 @@ pacman::p_load(
 ```
 
 |  |  |  |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | **Category** | **Packages** | **Purpose** |
 | **Core & Cleaning** | `tidyverse`, `broom` | Importing data, mapping survey codes to labels, and converting model results into plotable data frames. |
 | **Distribution Analysis** | `ggridges`, `ggdist` | Creating the density curves and ridgeline plots to see where student performance clusters. |
