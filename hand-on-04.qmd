@@ -163,7 +163,7 @@ ggplot(exam,
   theme_economist()
 ```
 
-## This is Second Part
+# This is Second Part
 
 ```{r}
 pacman::p_load(ggstatsplot, tidyverse)
