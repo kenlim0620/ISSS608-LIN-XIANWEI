@@ -32,6 +32,8 @@ website:
             text: "Hands-on Exercise 3"
           - href: hand-on-04.qmd
             text: "Hands-on Exercise 4"
+          - href: hand-on-05.qmd
+            text: "Hands-on Exercise 5"
 
       # 2. Dropdown for In-class Exercises
       - text: "In-class Exercises"
