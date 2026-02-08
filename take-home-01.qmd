@@ -52,33 +52,48 @@ pacman::p_load(
   viridis,     # For color-blind friendly color scales in heatmaps
   corrplot,    # For visualizing correlation matrices
   GGally,      # For advanced scatterplot matrices
-  ggpubr       # For publication-ready plots and statistical annotations
+  ggpubr,      # For publication-ready plots and statistical annotations
+  readxl
 )
 ```
 
 |  |  |  |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | **Category** | **Packages** | **Purpose** |
 | **Core & Cleaning** | `tidyverse`, `broom` | Importing data, mapping survey codes to labels, and converting model results into plotable data frames. |
 | **Distribution Analysis** | `ggridges`, `ggdist` | Creating the density curves and ridgeline plots to see where student performance clusters. |
 | **Aesthetics & Themes** | `ggthemes`, `scales`, `viridis` | Ensuring the charts look like professional policy reports with readable labels and high-contrast colors. |
 | **Complex Visuals** | `patchwork`, `GGally`, `corrplot` | Grouping several charts together (e.g., comparing Gender and Poverty side-by-side) and analyzing correlations. |
 
-# **Data Preparation**
+# **Data Section**
 
-## Import Data
+## Data Preparation & Wrangling
 
-The dataset (`Database paper.xlsx`) used in this exercise is the original survey data file retrieved from the study *"Dataset of factors affecting learning outcomes of students at the University of Education, Vietnam National University, Hanoi"* (Le et al., 2025). I import this dataset as `student_data`.
+In this section, I load the raw data, verify its integrity, and recode categorical variables to ensure truthful visualization.
+
+## Loading and Inspecting Data
+
+First, I load the dataset and perform an initial quality check to ensure there are no duplicate records or critical missing values that could skew the analysis. The dataset (`Database paper.xlsx`) used in this exercise is the original survey data file retrieved from the study *"Dataset of factors affecting learning outcomes of students at the University of Education, Vietnam National University, Hanoi"* (Le et al., 2025). I import this dataset as `student_data`.
 
 ```{r}
-#| label: import-data
+#| label: load-check-data
 #| message: false
 #| warning: false
 
-pacman::p_load(readxl)
-
-# Import the Xlsx file
+# Import data
 student_data <- read_xlsx("Database paper.xlsx")
+
+# Check dataset dimensions
+print(paste("Original Data Dimensions:", nrow(student_data), "rows,", ncol(student_data), "columns"))
+
+# Check for duplicate rows
+duplicate_count <- sum(duplicated(student_data))
+print(paste("Number of duplicate rows:", duplicate_count))
+
+# Check for missing values in key columns
+missing_values <- colSums(is.na(student_data))
+print("Missing values per column:")
+print(missing_values[missing_values > 0]) # Only print columns with missing data
 ```
 
 ## Data Pre-Processing
@@ -86,43 +101,52 @@ student_data <- read_xlsx("Database paper.xlsx")
 I first take a look at the data structure. Since the raw data uses integer codes (e.g., `1` for "Poor", `5` for "Excellent"), I must map these to meaningful factor levels based on the study's Codebook to ensuring our visualizations are truthful and interpretable.
 
 ```{r}
-#| label: data-processing
+#| label: data-wrangling
 #| message: false
 
-# Mapping integer codes to descriptive labels based on the Codebook
 df_clean <- student_data %>%
   mutate(
-    # Demographics
+    # --- Demographics ---
     Gender_Label = factor(Gender, levels = c(1, 2), labels = c("Male", "Female")),
     
     # Socioeconomic Status
     Household_Status = factor(Poor_Stu, levels = c(1, 2), 
                               labels = c("Poor Household", "Non-Poor Household")),
     
-    # Education Levels (1=Primary ... 5=University)
+    # --- Education Levels (Ordered Factors) ---
+    # I recode 1-6 based on the Codebook
     Father_Edu_Label = factor(Father_Edu, levels = c(1, 2, 3, 4, 5, 6),
                               labels = c("Primary", "Secondary", "High School", 
-                                         "College", "University", "Other")),
+                                         "College", "University", "Other"),
+                              ordered = TRUE),
     
-    # Target Variable: GPA (1=<2.0 ... 5=>3.6)
+    # --- Target Variable: GPA ---
+    # Create both a Label (Factor) and Numeric version for different plot types
     GPA_Label = factor(GPA, levels = c(1, 2, 3, 4, 5),
                        labels = c("Poor (<2.0)", "Average (2.0-2.5)", 
-                                  "Fair (2.5-3.2)", "Good (3.2-3.6)", "Excellent (>3.6)")),
-    # Numeric GPA for distribution plots
+                                  "Fair (2.5-3.2)", "Good (3.2-3.6)", "Excellent (>3.6)"),
+                       ordered = TRUE),
     GPA_Num = as.numeric(GPA),
     
-    # Behavioral Habits
+    # --- Habits & Support (Likert Scales) ---
     Study_Time = factor(Time_Studying, levels = 1:5,
-                        labels = c("<2 hrs", "2-4 hrs", "4-6 hrs", "6-8 hrs", ">8 hrs")),
-    Social_Media = factor(Time_SocicalMedia, levels = 1:5,
-                          labels = c("<1 hr", "1-2 hrs", "2-3 hrs", "3-4 hrs", ">4 hrs")),
+                        labels = c("<2 hrs", "2-4 hrs", "4-6 hrs", "6-8 hrs", ">8 hrs"),
+                        ordered = TRUE),
     
-    # Likert Scales (1=Not at all ... 5=Very)
+    Social_Media = factor(Time_SocicalMedia, levels = 1:5,
+                          labels = c("<1 hr", "1-2 hrs", "2-3 hrs", "3-4 hrs", ">4 hrs"),
+                          ordered = TRUE),
+    
     Uni_Support = factor(SupportOf_Uni, levels = 1:5,
-                         labels = c("Not at all", "Little", "Moderate", "Quite", "Very"))
+                         labels = c("Not at all", "Little", "Moderate", "Quite", "Very"),
+                         ordered = TRUE),
+    
+    Lecturer_Quality = factor(Quality_Lecturer, levels = 1:5,
+                              labels = c("Very Poor", "Poor", "Average", "Good", "Excellent"),
+                              ordered = TRUE)
   )
 
-# Quick check of the processed data
+# Verify the structure of the cleaned data
 glimpse(df_clean)
 ```
 
