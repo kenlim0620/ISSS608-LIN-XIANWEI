@@ -1,6 +1,5 @@
 ---
-title: "Take-Home Exercises 2"
-author: "LIN XIANWEI"
+title: "Hands-on Exercise 9"
 format: 
   html:
     toc: true
@@ -14,8 +13,4 @@ execute:
   warning: false
   freeze: true
 editor: visual
-date-modified: last-modified
-date-format: "MMMM D, YYYY"
-highlight-style: pygments
-number-sections: true
 ---

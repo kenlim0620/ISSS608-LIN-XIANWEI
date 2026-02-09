@@ -25,15 +25,25 @@ website:
       - text: "Hands-on Exercises"
         menu:
           - href: hand-on-01.qmd
-            text: "Hand-on Exercise 1"
+            text: "Hands-on Exercise 1"
           - href: hand-on-02.qmd
-            text: "Hand-on Exercise 2"
+            text: "Hands-on Exercise 2"
           - href: hand-on-03.qmd
             text: "Hands-on Exercise 3"
           - href: hand-on-04.qmd
             text: "Hands-on Exercise 4"
           - href: hand-on-05.qmd
             text: "Hands-on Exercise 5"
+          - href: hand-on-06.qmd
+            text: "Hands-on Exercise 6"
+          - href: hand-on-07.qmd
+            text: "Hands-on Exercise 7"
+          - href: hand-on-08.qmd
+            text: "Hands-on Exercise 8"
+          - href: hand-on-09.qmd
+            text: "Hands-on Exercise 9"
+          - href: hand-on-010.qmd
+            text: "Hands-on Exercise 10"
 
       # 2. Dropdown for In-class Exercises
       - text: "In-class Exercises"
