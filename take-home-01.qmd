@@ -278,16 +278,11 @@ ggplot(heatmap_data, aes(x = Time_Friends, y = Study_Time, fill = Avg_GPA)) +
 
 This heatmap challenges the stereotype of the isolated scholar. The brightest regions (highest GPAs) are found in the upper rows (High Study Time), but they span across Moderate Friend Time as well. Students who study \>8 hours but still spend 2-3 hours with friends perform exceptionally well. Conversely, the darkest region (lowest GPA) is the bottom-right corner: Low Study Time combined with High Friend Time. This visual suggests that balance—specifically high effort combined with moderate socialization—is a sustainable path to success.
 
-## Observation 7. Distribution Analysis
+## Observation 7: Socio-Academic Performance Mapping: A Multi-Dimensional Comparative Distribution Analysis
 
 To examine the distribution of student learning outcomes. I treat GPA as a continuous variable to visualize the "shape" of academic performance across the population. First, I visualize the overall distribution of GPA scores to understand the skewness and central tendency of student performance.
 
 ```{r}
-#| warning: false
-#| message: false
-#| fig.width: 14
-#| fig.height: 10
-
 # 1. Prepare Data
 # Ensure GPA_Num exists
 if(!"GPA_Num" %in% names(df_clean)) {
