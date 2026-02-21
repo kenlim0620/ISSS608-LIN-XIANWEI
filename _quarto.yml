@@ -36,7 +36,11 @@ website:
             text: "Hands-on Exercise 5"
           - href: hand-on-06.qmd
             text: "Hands-on Exercise 6"
+<<<<<<< HEAD
           - href: https://lin-xianwei.shinyapps.io/in-class-hands-on-06-07/
+=======
+          - href: https://lin-xianwei.shinyapps.io/New-Shiny/
+>>>>>>> f0872751f77802151465797d3f0b544fbb8bf19e
             text: "Hands-on Ex 7 (R Shiny App)"
             target: _blank  # Opens in a new tab (Recommended)
           - href: hand-on-08.qmd

@@ -5,6 +5,10 @@ account: lin-xianwei
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 16694091
+<<<<<<< HEAD
 bundleId: 11610301
+=======
+bundleId: 11594004
+>>>>>>> f0872751f77802151465797d3f0b544fbb8bf19e
 url: https://lin-xianwei.shinyapps.io/isss608-lin_xianwei/
 version: 1
