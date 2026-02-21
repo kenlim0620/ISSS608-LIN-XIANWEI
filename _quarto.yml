@@ -36,8 +36,9 @@ website:
             text: "Hands-on Exercise 5"
           - href: hand-on-06.qmd
             text: "Hands-on Exercise 6"
-          - href: hand-on-07.qmd
-            text: "Hands-on Exercise 7"
+          - href: https://lin-xianwei.shinyapps.io/in-class-hands-on-06-07/
+            text: "Hands-on Ex 7 (R Shiny App)"
+            target: _blank  # Opens in a new tab (Recommended)
           - href: hand-on-08.qmd
             text: "Hands-on Exercise 8"
           - href: hand-on-09.qmd
@@ -60,6 +61,11 @@ website:
             text: "Take-Home Exercises 1"
           - href: take-home-02.qmd
             text: "Take-Home Exercises 2"
+        
+      # 3. Dropdown for Take-Home Exercises
+      - text: "RShiny Dashboard"
+        href: https://lin-xianwei.shinyapps.io/New-Shiny/
+            
 format:
   html:
     theme: cosmo
