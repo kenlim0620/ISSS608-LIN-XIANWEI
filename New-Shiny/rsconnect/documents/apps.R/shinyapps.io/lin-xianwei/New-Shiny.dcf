@@ -1,0 +1,13 @@
+name: New-Shiny
+title: New-Shiny
+username: lin-xianwei
+account: lin-xianwei
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16694265
+bundleId: 11616985
+url: https://lin-xianwei.shinyapps.io/New-Shiny/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: app.R|customer_data.csv|transactions_data.csv|transactions_data.xlsx

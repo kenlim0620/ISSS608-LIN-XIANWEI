@@ -7,7 +7,7 @@
 #    https://shiny.posit.co/
 #
 
-<<<<<<< HEAD
+
 # ==========================================
 # FinRetain Shiny Application (DEPLOYMENT READY)
 # Includes Advanced Analytics (Survival, RFM & Sankey)
@@ -268,7 +268,7 @@ server <- function(input, output, session) {
 
 # --- 4. RUN APPLICATION ---
 shinyApp(ui = ui, server = server)
-=======
+
 library(shiny)
 
 # Define UI for application that draws a histogram
@@ -311,8 +311,3 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
-
-
-
->>>>>>> f0872751f77802151465797d3f0b544fbb8bf19e
