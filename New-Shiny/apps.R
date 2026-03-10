@@ -12,6 +12,23 @@
 # Includes EDA, CDA, K-Means, Survival, RFM, Sankey & Risk Simulator
 # ==========================================
 
+# ==========================================
+# FinRetain Shiny Application (FIXED & OPTIMIZED)
+# ==========================================
+#
+# This is a Shiny web application. You can run the application by clicking
+# the 'Run App' button above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    https://shiny.posit.co/
+#
+
+# ==========================================
+# FinRetain Shiny Application (FINAL VERSION)
+# Includes EDA, CDA, K-Means, Survival, RFM, Sankey & Risk Simulator
+# ==========================================
+
 library(shiny)
 library(bslib)
 library(dplyr)
@@ -46,14 +63,7 @@ if (!"RFM_Segment" %in% names(df)) {
     )
 }
 
-# FIX 2: Create Churn Event dynamically
-if (!"churn_event" %in% names(df)) {
-  df$churn_event <- ifelse(df$churn_probability > 0.5, 1, 0)
-}
-# ... (rest of the code continues normally)
-
-# FIX: If 'churn_event' doesn't exist, create it dynamically from 'churn_probability'
-# (Assuming anyone with > 50% probability is categorized as "Churned" = 1)
+# FIX 2: Create Churn Event dynamically from 'churn_probability'
 if (!"churn_event" %in% names(df)) {
   df$churn_event <- ifelse(df$churn_probability > 0.5, 1, 0)
 }
@@ -133,15 +143,19 @@ ui <- page_navbar(
             page_sidebar(
               sidebar = sidebar(
                 title = "Survival Parameters",
-                selectInput("surv_group", "Group Customers By:", choices = c("Acquisition Channel" = "acquisition_channel", "Income Bracket" = "income_bracket", "Customer Segment" = "customer_segment"))
+                # This allows the user to explore different segments dynamically
+                selectInput("surv_group", "Group Customers By:", 
+                            choices = c("Acquisition Channel" = "acquisition_channel", 
+                                        "Income Bracket" = "income_bracket", 
+                                        "Customer Segment" = "customer_segment"))
               ),
               card(
                 card_header("Kaplan-Meier Churn Probability Curve"),
                 plotOutput("survival_plot", height = "600px"),
-                p("Displays the exact tenure month where drop-off risk is highest.", class = "text-muted mt-2")
+                p("The 'Danger Zone' is where the curve drops most steeply, indicating high churn risk.")
               )
             )
-  ), 
+  ),
   
   # MODULE 5: Macro Cash Flow (Sankey) 
   nav_panel("Ecosystem Cash Flow",
@@ -235,9 +249,27 @@ server <- function(input, output, session) {
   
   # MODULE 4: Survival Analysis
   output$survival_plot <- renderPlot({
-    form <- as.formula(paste("Surv(customer_tenure, churn_event) ~", input$surv_group))
-    surv_obj <- surv_fit(form, data = df) 
-    ggsurvplot(surv_obj, data = df, pval = TRUE, conf.int = TRUE, risk.table = TRUE, ggtheme = theme_minimal(), title = paste("Survival by", input$surv_group))
+    # 1. Create a dynamic formula based on user input (e.g., Surv(tenure, churn) ~ gender)
+    formula_str <- paste("Surv(customer_tenure, churn_event) ~", input$surv_group)
+    surv_formula <- as.formula(formula_str)
+    
+    # 2. Fit the Kaplan-Meier Model
+    fit <- surv_fit(surv_formula, data = df)
+    
+    # 3. Generate the Interactive Visualization (CRITICAL FIX: wrapped in print())
+    print(
+      ggsurvplot(
+        fit, 
+        data = df,
+        pval = TRUE,             # Show p-value 
+        conf.int = TRUE,         # Show confidence intervals
+        risk.table = TRUE,       # Show the number of customers at risk
+        palette = "Set1",        # Professional color palette
+        legend.labs = NULL,      
+        ggtheme = theme_minimal(),
+        title = paste("Customer Survival by", input$surv_group)
+      )
+    )
   })
   
   # MODULE 5: Sankey Cash Flow
@@ -262,6 +294,8 @@ server <- function(input, output, session) {
     similar_users <- df %>% mutate(age_diff = abs(age - input$sim_age), tx_diff = abs(tx_count - input$sim_tx)) %>% arrange(age_diff, tx_diff) %>% head(5) %>% select(customer_id, age, tx_count, support_tickets_count, satisfaction_score, churn_probability)
     output$similar_customers_table <- renderDT({ datatable(similar_users, options = list(dom = 't')) })
   }, ignoreNULL = FALSE) 
+  
 }
 
+# --- 4. RUN APP ---
 shinyApp(ui = ui, server = server)
