@@ -60,7 +60,7 @@ website:
           - href: take-home-01.qmd
             text: "Take-Home Exercises 1"
           - href: take-home-02.qmd
-            text: "Take-Home Exercises 2"
+            text: "Take-Home Exercise 2: Prototype of Storyboard"
         
       # 3. Dropdown for Take-Home Exercises
       - text: "RShiny Dashboard"
