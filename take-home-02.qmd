@@ -186,7 +186,7 @@ clean_customers <- raw_customers %>%
     total_tx_volume = replace_na(total_tx_volume, 0)
   ) %>%
   
-  # --- STEP C: Survival Analysis Feature (Fixes your error!) ---
+  # --- STEP C: Survival Analysis Feature ---
   mutate(
     churn_event = ifelse(customer_segment == "inactive" | churn_probability > 0.8, 1, 0)
   ) %>%
@@ -291,7 +291,7 @@ How does Customer Tenure (how long they stay) distribute across different RFM Se
 #| warning: false
 #| message: false
 
-# Install ggridges if you haven't: install.packages("ggridges")
+
 library(ggplot2)
 library(ggridges)
 
@@ -700,7 +700,7 @@ To integrate this static prototype into the FinRetain Shiny application, we must
 
 ## 🎨 1. UI Components & Layout Design
 
-You have built a very clean, modern dashboard using Bootstrap 5. Here are the core layout wrappers and design choices you utilized:
+I have built a very clean, modern dashboard using Bootstrap 5. Here are the core layout wrappers and design choices utilized:
 
 -   **Theme:** `bs_theme(version = 5, bootswatch = "flatly")` for a flat, modern, and professional look.
 
@@ -744,7 +744,7 @@ These are the interactive widgets that allow users to filter data, change groupi
 
 ### 📊 3. Outputs (Visualizations & Tables)
 
-These are the UI placeholders that receive the rendered plots, text, or tables from your server logic.
+These are the UI placeholders that receive the rendered plots, text, or tables from the server logic.
 
 -   **Module 1: Exploratory Data (EDA)**
 
