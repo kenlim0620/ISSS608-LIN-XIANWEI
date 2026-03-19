@@ -14,3 +14,320 @@ execute:
   freeze: true
 editor: visual
 ---
+
+## The first part
+
+```{r}
+dir.create("C:/RTemp", showWarnings = FALSE)
+Sys.setenv(TMPDIR = "C:/RTemp")
+
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman")
+}
+
+pacman::p_load(lubridate, ggthemes, reactable, reactablefmtr, gt, gtExtras, tidyverse)
+```
+
+```{r}
+library(RODBC)
+con <- odbcConnectAccess2007('Coffee Chain.mdb')
+coffeechain <- sqlFetch(con, 'CoffeeChain Query')
+write_rds(coffeechain, "CoffeeChain.rds")
+odbcClose(con)
+```
+
+```{r}
+coffeechain <- read_rds("CoffeeChain.rds")
+product <- coffeechain %>%
+  group_by(`Product`) %>%
+  summarise(`target` = sum(`Budget Sales`),
+            `current` = sum(`Sales`)) %>%
+  ungroup()
+```
+
+```{r}
+ggplot(product, aes(Product, current)) + 
+  geom_col(aes(Product, max(target) * 1.01),
+           fill="grey85", width=0.85) +
+  geom_col(aes(Product, target * 0.75),
+           fill="grey60", width=0.85) +
+  geom_col(aes(Product, target * 0.5),
+           fill="grey50", width=0.85) +
+  geom_col(aes(Product, current), 
+           width=0.35,
+           fill = "black") + 
+  geom_errorbar(aes(y = target,
+                    x = Product, 
+                    ymin = target,
+                    ymax= target), 
+                width = .4,
+                colour = "red",
+                size = 1) +
+  coord_flip()
+```
+
+## Second Part
+
+```{r}
+sales_report <- coffeechain %>%
+  filter(Date >= "2013-01-01") %>%
+  mutate(Month = month(Date)) %>%
+  group_by(Month, Product) %>%
+  summarise(Sales = sum(Sales)) %>%
+  ungroup() %>%
+  select(Month, Product, Sales)
+
+mins <- group_by(sales_report, Product) %>% 
+  slice(which.min(Sales))
+maxs <- group_by(sales_report, Product) %>% 
+  slice(which.max(Sales))
+ends <- group_by(sales_report, Product) %>% 
+  filter(Month == max(Month))
+
+quarts <- sales_report %>%
+  group_by(Product) %>%
+  summarise(quart1 = quantile(Sales, 
+                              0.25),
+            quart2 = quantile(Sales, 
+                              0.75)) %>%
+  right_join(sales_report)
+
+ggplot(sales_report, aes(x=Month, y=Sales)) + 
+  facet_grid(Product ~ ., scales = "free_y") + 
+  geom_ribbon(data = quarts, aes(ymin = quart1, max = quart2), 
+              fill = 'grey90') +
+  geom_line(size=0.3) +
+  geom_point(data = mins, col = 'red') +
+  geom_point(data = maxs, col = 'blue') +
+  geom_text(data = mins, aes(label = Sales), vjust = -1) +
+  geom_text(data = maxs, aes(label = Sales), vjust = 2.5) +
+  geom_text(data = ends, aes(label = Sales), hjust = 0, nudge_x = 0.5) +
+  geom_text(data = ends, aes(label = Product), hjust = 0, nudge_x = 1.0) +
+  expand_limits(x = max(sales_report$Month) + 
+                  (0.25 * (max(sales_report$Month) - min(sales_report$Month)))) +
+  scale_x_continuous(breaks = seq(1, 12, 1)) +
+  scale_y_continuous(expand = c(0.1, 0)) +
+  theme_tufte(base_size = 3, base_family = "Helvetica") +
+  theme(axis.title=element_blank(), axis.text.y = element_blank(), 
+        axis.ticks = element_blank(), strip.text = element_blank())
+```
+
+## Third Part
+
+```{r}
+product %>%
+  gt::gt() %>%
+  gt_plt_bullet(column = current, 
+              target = target, 
+              width = 60,
+              palette = c("lightblue", 
+                          "black")) %>%
+  gt_theme_538()
+
+report <- coffeechain %>%
+  mutate(Year = year(Date)) %>%
+  filter(Year == "2013") %>%
+  mutate (Month = month(Date, 
+                        label = TRUE, 
+                        abbr = TRUE)) %>%
+  group_by(Product, Month) %>%
+  summarise(Sales = sum(Sales)) %>%
+  ungroup()
+
+report %>%
+  group_by(Product) %>%
+  summarize('Monthly Sales' = list(Sales), 
+            .groups = "drop")
+
+report %>%
+  group_by(Product) %>%
+  summarize('Monthly Sales' = list(Sales), 
+            .groups = "drop") %>%
+   gt() %>%
+   gt_plt_sparkline('Monthly Sales',
+                    same_limit = FALSE)
+
+report %>% 
+  group_by(Product) %>% 
+  summarise("Min" = min(Sales, na.rm = T),
+            "Max" = max(Sales, na.rm = T),
+            "Average" = mean(Sales, na.rm = T)
+            ) %>%
+  gt() %>%
+  fmt_number(columns = 4,
+    decimals = 2)
+
+spark <- report %>%
+  group_by(Product) %>%
+  summarize('Monthly Sales' = list(Sales), 
+            .groups = "drop")
+
+sales <- report %>% 
+  group_by(Product) %>% 
+  summarise("Min" = min(Sales, na.rm = T),
+            "Max" = max(Sales, na.rm = T),
+            "Average" = mean(Sales, na.rm = T)
+            )
+
+sales_data = left_join(sales, spark)
+
+sales_data %>%
+  gt() %>%
+  gt_plt_sparkline('Monthly Sales',
+                   same_limit = FALSE)
+```
+
+```{r}
+bullet <- coffeechain %>%
+  filter(Date >= "2013-01-01") %>%
+  group_by(`Product`) %>%
+  summarise(`Target` = sum(`Budget Sales`),
+            `Actual` = sum(`Sales`)) %>%
+  ungroup() 
+
+sales_data = sales_data %>%
+  left_join(bullet)
+
+sales_data %>%
+  gt() %>%
+  gt_plt_sparkline('Monthly Sales') %>%
+  gt_plt_bullet(column = Actual, 
+                target = Target, 
+                width = 28,
+                palette = c("lightblue", 
+                          "black")) %>%
+  gt_theme_538()
+
+```
+
+## Fourth Part
+
+```{r}
+remotes::install_github("timelyportfolio/dataui")
+library(dataui)
+
+# 1. Create a clean, space-free temporary directory to bypass the "Ken Lin" path error
+dir.create("C:/RTemp", showWarnings = FALSE)
+Sys.setenv(TMPDIR = "C:/RTemp")
+
+# 2. Set a highly reliable global CRAN mirror
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+# 3. Install reactablefmtr and EVERYTHING it needs to work
+install.packages("reactablefmtr", dependencies = TRUE)
+
+# 1. 汇总数据：按 Product 分组，把 Sales 列打包成列表
+# 将结果存入新变量 report_summary，保护原始数据
+report_summary <- report %>%
+  group_by(Product) %>%
+  summarize(`Monthly Sales` = list(Sales)) 
+
+# 2. 渲染漂亮的迷你图表格
+reactable(
+  report_summary,
+  columns = list(
+    Product = colDef(maxWidth = 200),
+    `Monthly Sales` = colDef(
+      # 使用 reactablefmtr 的函数画图
+      cell = react_sparkline(report_summary) 
+    )
+  )
+)
+
+
+
+report <- report %>%
+  group_by(Product) %>%
+  summarize(`Monthly Sales` = list(Sales))
+
+reactable(
+  report,
+  columns = list(
+    Product = colDef(maxWidth = 200),
+    `Monthly Sales` = colDef(
+      cell = react_sparkline(report)
+    )
+  )
+)
+
+reactable(
+  report,
+  defaultPageSize = 13,
+  columns = list(
+    Product = colDef(maxWidth = 200),
+    `Monthly Sales` = colDef(
+      cell = react_sparkline(report)
+    )
+  )
+)
+
+reactable(
+  report,
+  defaultPageSize = 13,
+  columns = list(
+    Product = colDef(maxWidth = 200),
+    `Monthly Sales` = colDef(
+      cell = react_sparkline(
+        report,
+        highlight_points = highlight_points(
+          min = "red", max = "blue"),
+        labels = c("first", "last")
+        )
+    )
+  )
+)
+
+reactable(
+  report,
+  defaultPageSize = 13,
+  columns = list(
+    Product = colDef(maxWidth = 200),
+    `Monthly Sales` = colDef(
+      cell = react_sparkline(
+        report,
+        highlight_points = highlight_points(
+          min = "red", max = "blue"),
+        statline = "mean"
+        )
+    )
+  )
+)
+
+reactable(
+  report,
+  defaultPageSize = 13,
+  columns = list(
+    Product = colDef(maxWidth = 200),
+    `Monthly Sales` = colDef(
+      cell = react_sparkline(
+        report,
+        highlight_points = highlight_points(
+          min = "red", max = "blue"),
+        line_width = 1,
+        bandline = "innerquartiles",
+        bandline_color = "green"
+        )
+    )
+  )
+)
+
+reactable(
+  report,
+  defaultPageSize = 13,
+  columns = list(
+    Product = colDef(maxWidth = 200),
+    `Monthly Sales` = colDef(
+      cell = react_sparkbar(
+        report,
+        highlight_bars = highlight_bars(
+          min = "red", max = "blue"),
+        bandline = "innerquartiles",
+        statline = "mean")
+    )
+  )
+)
+
+
+```
